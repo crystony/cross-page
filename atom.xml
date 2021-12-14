@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>HOHA</title>
+  <icon>https://cross.hoha.io/icon.png</icon>
+  
+  <link href="https://cross.hoha.io/atom.xml" rel="self"/>
+  
+  <link href="https://cross.hoha.io/"/>
+  <updated>2021-12-14T05:01:03.441Z</updated>
+  <id>https://cross.hoha.io/</id>
+  
+  <author>
+    <name>花花</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>xxxxxxxx</title>
+    <link href="https://cross.hoha.io/2021/12/14/%E5%BD%93%E5%B9%B4%E5%AF%BC%E8%87%B4%E4%BB%A5%E5%A4%AA%E5%9D%8A%E5%88%86%E5%8F%89%E7%9A%84The-DAO%E4%BA%8B%E4%BB%B6%E6%98%AF%E6%80%8E%E4%B9%88%E5%9B%9E%E4%BA%8B%EF%BC%9F/"/>
+    <id>https://cross.hoha.io/2021/12/14/%E5%BD%93%E5%B9%B4%E5%AF%BC%E8%87%B4%E4%BB%A5%E5%A4%AA%E5%9D%8A%E5%88%86%E5%8F%89%E7%9A%84The-DAO%E4%BA%8B%E4%BB%B6%E6%98%AF%E6%80%8E%E4%B9%88%E5%9B%9E%E4%BA%8B%EF%BC%9F/</id>
+    <published>2021-12-14T12:58:50.000Z</published>
+    <updated>2021-12-14T05:01:03.441Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;B站和Youtube视频&lt;/p&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/Sn8_yQXMkbY&quot; title=&quot;YouTube video player&quot;</summary>
+        
+      
+    
+    
+    
+    
+  </entry>
+  
+  <entry>
+    <title>xxxxx</title>
+    <link href="https://cross.hoha.io/2021/12/14/zh-cn/1/"/>
+    <id>https://cross.hoha.io/2021/12/14/zh-cn/1/</id>
+    <published>2021-12-14T12:58:05.000Z</published>
+    <updated>2021-12-14T05:01:03.441Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;xxxxxxxxxxxxxx&lt;/p&gt;
+</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Python" scheme="https://cross.hoha.io/tags/Python/"/>
+    
+  </entry>
+  
+</feed>
