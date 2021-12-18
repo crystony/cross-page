@@ -1,0 +1,108 @@
+<!DOCTYPE html><html lang="[&quot;zh-CN&quot;,&quot;default&quot;]"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>Frp + Trojan | HOHA</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=1.0.0"><link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/normalize.css/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/purecss/build/pure-min.min.css"><link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/purecss/build/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script><link rel="icon" mask="" sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"><link rel="alternate" type="application/atom+xml" href="/atom.xml"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+ga('create','UA-30888143-1','auto');ga('send','pageview');
+</script><script type="text/javascript" src="//cdn.jsdelivr.net/npm/clipboard/dist/clipboard.min.js"></script><script type="text/javascript" src="//cdn.jsdelivr.net/gh/codeseven/toastr/build/toastr.min.js"></script><link rel="stylesheet" href="//cdn.jsdelivr.net/gh/codeseven/toastr/build/toastr.min.css"><meta name="generator" content="Hexo 4.2.1"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Frp + Trojan</h1><a id="logo" href="/.">HOHA</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Frp + Trojan</h1><div class="post-meta">2021-12-18</div><div class="post-content"><p>内网运行着一个服务，需要提供给外部用户临时访问，但是我们服务运行在内网某一个机器上的，并没有公网IP和端口。</p>
+<p>那么就需要把这个内网机器上的IP和端口映射转换成公网的。</p>
+<p>常用的操作无非这么几种：</p>
+<ol>
+<li>拨号上网的，一般都会分配一个公网IP，那就可以在路由器上把内网IP的某个端口映射成路由器的端口。这就可以通过 路由器公网IP+端口 访问到内网机器。这种方式最大弊端就是拨号网络IP会经常变动</li>
+<li><code>外部用户所在局域网</code>和<code>服务所在的的局域网</code>之间，购买专线。费用有点小贵，而且有设备要求</li>
+<li>企业宽带有固定公网IP，就可以搭建一个VPN服务，由外部用户登录VPN来访问内网服务</li>
+</ol>
+<p>不管哪种方案，其实要求可以归纳为这么几点：</p>
+<ol>
+<li>用户端：<ol>
+<li>有稳定的访问地址</li>
+<li>能正常访问局域网里的服务</li>
+</ol>
+</li>
+<li>局域网端<ol>
+<li>能提供公网访问的地址</li>
+</ol>
+</li>
+</ol>
+<p>经过一番折腾，总结了一个相对成本较小的方案<br> <img src="/images/net/Frp+Trojan/Frp、trojan示意图.png" alt=""><br>VPS 端运行 Frps(frp server)，内网 PC 运行 Frpc 和代理软件，内网PC一般来说是 PC 机、公司的 VM 等</p>
+<p>这样VPS和内网 PC 组成了 Peer</p>
+<p>以上这种方案的网络情况如下：</p>
+<p>整体的网络带宽 = min(VPS带宽、局域网拨号带宽)</p>
+<p>整体的网络稳定性 = min(VPS网络稳定性、局域网拨号网络稳定性)</p>
+<p>整体的网络耗时 = sum(VPS网络稳定性、局域网拨号网络稳定性)</p>
+<h3 id="安装Frp"><a href="#安装Frp" class="headerlink" title="安装Frp"></a>安装Frp</h3><p>文档在这里：<a href="https://github.com/fatedier/frp" target="_blank" rel="noopener">英文文档</a> 、<a href="https://gofrp.org/docs/" target="_blank" rel="noopener">中文文档</a></p>
+<p>Frp分两部分， 在 VPS 上安装 Frps， 在内网 PC 上安装Frpc</p>
+<p>在 <a href="https://github.com/fatedier/frp/releases" target="_blank" rel="noopener">release</a> 里找到自己喜欢的版本和适合内网 PC 系统的包，下载到本地。里面包含了Frps和Frpc<br><img src="/images/net/Frp+Trojan/文件结构.png" alt="img.png"></p>
+<h4 id="在-VPS-上安装-Frps"><a href="#在-VPS-上安装-Frps" class="headerlink" title="在 VPS 上安装 Frps"></a>在 VPS 上安装 Frps</h4><ol>
+<li>编辑<code>frps.ini</code>文件，以下是示例，更多可以查看 <a href="https://github.com/fatedier/frp/blob/dev/conf/frps_full.ini" target="_blank" rel="noopener">frps_full.ini</a> , <a href="https://gofrp.org/docs/examples/" target="_blank" rel="noopener">示例</a><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[common]</span></span><br><span class="line"><span class="attr">bind_port</span> = <span class="number">17000</span></span><br><span class="line"><span class="comment"># Specify a UDP port for KCP.</span></span><br><span class="line"><span class="attr">kcp_bind_port</span> = <span class="number">17000</span></span><br><span class="line"><span class="attr">bind_udp_port</span> = <span class="number">17001</span></span><br><span class="line"><span class="comment"># 有条件的可以设置成80（VPS在大陆的话，需要备案）</span></span><br><span class="line"><span class="attr">vhost_http_port</span> = <span class="number">19998</span></span><br><span class="line"><span class="comment"># 有条件的可以设置成443（VPS在大陆的话，需要备案）</span></span><br><span class="line"><span class="attr">vhost_https_port</span> = <span class="number">19999</span></span><br><span class="line"></span><br><span class="line"><span class="attr">dashboard_port</span> = <span class="number">17500</span></span><br><span class="line"><span class="comment"># dashboard's username and password are both optional</span></span><br><span class="line"><span class="attr">dashboard_user</span> = hoha</span><br><span class="line"><span class="attr">dashboard_pwd</span> = pds3uxxxxNIdZ8Dj1</span><br><span class="line"></span><br><span class="line"><span class="attr">allow_ports</span> = <span class="number">10000</span>-<span class="number">40000</span></span><br><span class="line"></span><br><span class="line"><span class="attr">authentication_method</span> = token</span><br><span class="line"><span class="attr">token</span> = <span class="number">4</span>y33rGvxxxx8Xs85H</span><br></pre></td></tr></table></figure></li>
+<li>上传文件。可以直接上传到对应位置，也可以上传到某个目录，然后创建软链。个人更喜欢第二种</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>本地文件</th>
+<th>上传后在VPS的文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>frps</td>
+<td>/usr/bin/frps</td>
+</tr>
+<tr>
+<td>frps.ini</td>
+<td>/etc/frp/frps.ini</td>
+</tr>
+<tr>
+<td>systemd/frps.service</td>
+<td>/lib/systemd/system/frps.service</td>
+</tr>
+</tbody>
+</table>
+<ol start="3">
+<li>系统服务重新加载 <code>sudo systemctl daemon-reload</code> ，开机启动 <code>sudo systemctl enable frps.service</code></li>
+<li>启动Frps <code>sudo systemctl start frps.service</code>，查看状态 <code>sudo systemctl status frps.service</code></li>
+</ol>
+<h4 id="在-内网PC-上安装-Frpc"><a href="#在-内网PC-上安装-Frpc" class="headerlink" title="在 内网PC 上安装 Frpc"></a>在 内网PC 上安装 Frpc</h4><ol>
+<li>编辑<code>frpc.ini</code>文件，以下是示例，更多可以查看 <a href="https://github.com/fatedier/frp/blob/dev/conf/frpc_full.ini" target="_blank" rel="noopener">frpc_full.ini</a> , <a href="https://gofrp.org/docs/examples/" target="_blank" rel="noopener">示例</a><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[common]</span></span><br><span class="line"><span class="comment"># vps 公网ip</span></span><br><span class="line"><span class="attr">server_addr</span> = mydomain.com</span><br><span class="line"><span class="comment"># 与 frps.ini 保持一致</span></span><br><span class="line"><span class="attr">server_port</span> = <span class="number">17000</span></span><br><span class="line"><span class="attr">authentication_method</span> = token</span><br><span class="line"><span class="attr">token</span> = <span class="number">4</span>y33rGvxxxx8Xs85H</span><br><span class="line"></span><br><span class="line"><span class="section">[ssh]</span></span><br><span class="line"><span class="attr">type</span> = tcp</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">22</span></span><br><span class="line"><span class="attr">remote_port</span> = <span class="number">10022</span></span><br><span class="line"></span><br><span class="line"><span class="section">[trojan-web]</span></span><br><span class="line"><span class="attr">type</span> = http</span><br><span class="line"><span class="attr">local_port</span> = <span class="number">80</span></span><br><span class="line"><span class="comment"># 自己的域名或者IP</span></span><br><span class="line"><span class="attr">custom_domains</span> = mydomain.com</span><br><span class="line"></span><br><span class="line"><span class="section">[trojan-https]</span></span><br><span class="line"><span class="attr">type</span> = https</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">local_port</span> = <span class="number">443</span></span><br><span class="line"><span class="comment"># 自己的域名或者IP</span></span><br><span class="line"><span class="attr">custom_domains</span> = mydomain.com</span><br></pre></td></tr></table></figure></li>
+<li>上传文件。可以直接上传到对应位置，也可以上传到某个目录，然后创建软链。个人更喜欢第二种</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>本地文件</th>
+<th>上传后在VPS的文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>frpc</td>
+<td>/usr/bin/frpc</td>
+</tr>
+<tr>
+<td>frpc.ini</td>
+<td>/etc/frp/frpc.ini</td>
+</tr>
+<tr>
+<td>systemd/frpc.service</td>
+<td>/lib/systemd/system/frpc.service</td>
+</tr>
+</tbody>
+</table>
+<ol start="3">
+<li>系统服务重新加载 <code>sudo systemctl daemon-reload</code> ，开机启动 <code>sudo systemctl enable frpc.service</code></li>
+<li>启动Frpc <code>sudo systemctl start frpc.service</code>，查看状态 <code>sudo systemctl status frpc.service</code></li>
+</ol>
+<p>以上Frp就安装完成了，可以尝试验证了。刚刚配置了把本地的 22 端口映射成 VPS 的 10022<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh root@&#123;vps的公网IP&#125; -p10022</span><br></pre></td></tr></table></figure><br>如果提示输入密码，我们就穿透成功了</p>
+<h3 id="安装Trojan"><a href="#安装Trojan" class="headerlink" title="安装Trojan"></a>安装Trojan</h3><p>Frp解决了把局域网的端口暴露成VPS公网端口，那么如果我们在局域网安装一个 Trojan，只要把 Trojan 的端口通过 Frp 暴露出去，那么 Trojan 就可以被公网访问了</p>
+<p>我找到一个安装相对方便，支持 web 管理用户的封装。<a href="https://github.com/Jrohy/trojan" target="_blank" rel="noopener">Trojan</a></p>
+<p>安装大致步骤：</p>
+<ol>
+<li>安装docker</li>
+<li>安装mysql，可以直接用 docker 运行 mysql<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --name trojan-mariadb --restart=always -p 3306:3306 -v /data/trojan/data/mariadb:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=trojan -e MYSQL_ROOT_HOST=% -e MYSQL_DATABASE=trojan -d mariadb:10.2</span><br></pre></td></tr></table></figure></li>
+<li>安装 trojan 和管理web。注意：这里我挂载了一个目录<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it -d --name trojan --net=host --restart=always --privileged -v /data/trojan/cert:/data/cert jrohy/trojan init</span><br></pre></td></tr></table></figure>
+还是直接看官方说明吧。我太懒了😂<br><img src="/images/net/Frp+Trojan/官方说明.png" alt="img.png"></li>
+<li>配置trojan。大部分操作都可以按照默认的来。但是我们是局域网安装的，证书是不能自动生成的，所以需要配置证书位置。刚刚在启动docker镜像时，已经挂载了目录，所以把证书文件放在挂载目录就行</li>
+</ol>
+<p>证书免费申请：<a href="https://console.cloud.tencent.com/ssl/dsc/apply" target="_blank" rel="noopener">DNSPOD上申请免费证书</a></p>
+<h3 id="看看效果吧"><a href="#看看效果吧" class="headerlink" title="看看效果吧"></a>看看效果吧</h3><p><img src="/images/net/Frp+Trojan/img_1.png" alt="img_1.png"><br><img src="/images/net/Frp+Trojan/img_2.png" alt="img_2.png"><br><img src="/images/net/Frp+Trojan/img_3.png" alt="img_3.png"><br><img src="/images/net/Frp+Trojan/img_4.png" alt="img_4.png"></p>
+</div><div class="tags"><a href="/tags/frp/"><i class="fa fa-tag"></i>frp</a><a href="/tags/trojan/"><i class="fa fa-tag"></i>trojan</a><a href="/tags/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F/"><i class="fa fa-tag"></i>内网穿透</a></div><div class="post-nav"><a class="next" href="/2021/12/17/github/%E7%94%A8GitHub%20Actions%E8%87%AA%E5%8A%A8%E5%8F%91%E5%B8%83Hexo%E7%BD%91%E7%AB%99/">用GitHub Actions自动发布Hexo网站</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/Github-pages/" style="font-size: 15px;">Github pages</a> <a href="/tags/GitHub-Actions/" style="font-size: 15px;">GitHub Actions</a> <a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/frp/" style="font-size: 15px;">frp</a> <a href="/tags/trojan/" style="font-size: 15px;">trojan</a> <a href="/tags/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F/" style="font-size: 15px;">内网穿透</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2021/12/18/net/Frp+Trojan/">Frp + Trojan</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/12/17/github/%E7%94%A8GitHub%20Actions%E8%87%AA%E5%8A%A8%E5%8F%91%E5%B8%83Hexo%E7%BD%91%E7%AB%99/">用GitHub Actions自动发布Hexo网站</a></li><li class="post-list-item"><a class="post-list-link" href="/2021/12/15/github/github%20pages%E5%88%9D%E8%AF%86/">github pages初识</a></li></ul></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2021 <a href="/." rel="nofollow">HOHA.</a> Powered by<a rel="nofollow" target="_blank" href="https://cross.hoha.io"> 花花.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=1.0.0" async></script><script type="text/javascript" src="//cdn.jsdelivr.net/gh/fancyapps/fancybox/dist/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=1.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox/dist/jquery.fancybox.min.css"><script type="text/javascript" src="/js/copycode.js" successtext="复制成功!"></script><link rel="stylesheet" type="text/css" href="/css/copycode.css"><script type="text/javascript" src="/js/codeblock-resizer.js?v=1.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=1.0.0"></script></div></body></html>
